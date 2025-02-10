@@ -4,10 +4,11 @@
 # Actual Description	: Code that will impress u ;)
 # HEADERS ================================================================
 
-import numpy as np
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
+
+import math
 
 from typing import List
 
@@ -24,6 +25,21 @@ def section(section_name:str = "SECTION") -> None:
 # ========================================================================
 
 
+def get_triangle_sides(hypotenuse, angle_degrees):
+	round_to_decimal = 10
+
+	angle_radians = math.radians(angle_degrees)
+	height = round(hypotenuse * math.sin(angle_radians), round_to_decimal)
+	length = round(hypotenuse * math.cos(angle_radians), round_to_decimal)
+	return [height, length]
+
+def polygon_vertices(number_of_sides = 5, radius = 10):
+	angle_per_vertex = 360/number_of_sides
+	coordinates:list = []
+	for i in range(0,5):
+		coordinates.append(get_triangle_sides(radius, angle_per_vertex*i))
+	
+	return coordinates
 
 # ========================================================================
 # MAIN 
@@ -49,16 +65,25 @@ if __name__ == '__main__':
 		elif col in nodes_green:
 			color_str = "green"
 		G.add_node(col, color=color_str)
+	new_node_colors = [G.nodes[each_node]['color'] for each_node in G.nodes]
+	print(new_node_colors)
 
 	for col in df.columns:
 		for row in df[col].index:
 			edge_weight:int = df.at[row, col]
 			if edge_weight > 0:
-				# print(f"{col}, {row}, {df.at[row, col]}")
 				G.add_edge(col, row, weight = edge_weight)
 
-	node_colors = [G.nodes[n]['color'] for n in G.nodes]
-	nx.draw(G, with_labels=True, node_color=node_colors)
+	new_positions = nx.shell_layout(G)
+	inner_circle_coords:list = polygon_vertices(radius=0.5)
+
+	for i, center_node in enumerate(nodes_blue): 
+		new_positions[center_node] = inner_circle_coords[i]
+	print(new_positions)
+
+	nx.draw(G, pos=new_positions, with_labels=True, node_color=new_node_colors)
 	plt.show()
+
+
 
 	section("END")
